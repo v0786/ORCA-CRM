@@ -1,0 +1,26 @@
+{
+  "name": "orca-crm",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "shared"
+  ],
+  "scripts": {
+    "dev:ics": "npm --workspace apps/ics run dev",
+    "dev:kds": "npm --workspace apps/kds run dev",
+    "build": "npm --workspace apps/ics run build && npm --workspace apps/kds run build",
+    "preview:ics": "npm --workspace apps/ics run preview",
+    "preview:kds": "npm --workspace apps/kds run preview",
+    "deploy:ics": "firebase deploy --only hosting:ics",
+    "deploy:kds": "firebase deploy --only hosting:kds"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "firebase-tools": "^15.17.0"
+  }
+}

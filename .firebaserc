@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "pizza-express-fdad7"
+  },
+  "targets": {
+    "pizza-express-fdad7": {
+      "hosting": {
+        "ics": [
+          "ics"
+        ],
+        "kds": [
+          "kds"
+        ]
+      }
+    }
+  }
+}

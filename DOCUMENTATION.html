@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ORCA-CRM – Technical Documentation</title>
+    <style>
+      :root{color-scheme:dark}
+      body{margin:0;background:#09090b;color:#fafafa;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+      a{color:#fdba74;text-decoration:none}
+      a:hover{text-decoration:underline}
+      code,pre{font-family:ui-monospace,Consolas,monospace}
+      .wrap{max-width:1100px;margin:0 auto;padding:24px}
+      .top{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+      .title{font-size:20px;font-weight:700}
+      .meta{color:rgba(255,255,255,.7);font-size:12px}
+      .search{display:flex;gap:8px;align-items:center}
+      .search input{width:min(520px,75vw);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;color:#fff;outline:none}
+      .search input:focus{border-color:rgba(249,115,22,.45);box-shadow:0 0 0 4px rgba(249,115,22,.15)}
+      .card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:16px;padding:16px}
+      .grid{display:grid;gap:14px}
+      .grid2{display:grid;gap:14px;grid-template-columns:1fr}
+      @media (min-width:920px){.grid2{grid-template-columns:320px 1fr}}
+      .toc a{display:block;padding:6px 0;color:rgba(255,255,255,.85)}
+      .toc a:hover{color:#fff}
+      h2{margin:22px 0 10px;font-size:16px}
+      h3{margin:16px 0 8px;font-size:14px}
+      ul{margin:8px 0 0 18px;padding:0}
+      li{margin:4px 0}
+      .pill{display:inline-flex;gap:6px;align-items:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);border-radius:999px;padding:4px 10px;font-size:12px;color:rgba(255,255,255,.8)}
+      .path{color:rgba(255,255,255,.8)}
+      pre{margin:10px 0 0;white-space:pre;overflow:auto;max-height:520px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:#0b0b10;padding:12px}
+      .muted{color:rgba(255,255,255,.7)}
+      .section{scroll-margin-top:18px}
+      .hide{display:none!important}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <div class="title">ORCA-CRM – Technical Documentation</div>
+          <div class="meta">Monorepo (Vite + React + TypeScript) • Firebase Auth/Firestore/Storage • ICS + KDS</div>
+        </div>
+        <div class="search">
+          <input id="q" placeholder="Search: features, pages, collections, files…" />
+          <span class="pill">Tip: Ctrl+F also works</span>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:14px">
+        <div class="card toc">
+          <div class="pill">Table of contents</div>
+          <a href="#inventory">1. Feature Inventory</a>
+          <a href="#structure">2. Directory Map</a>
+          <a href="#architecture">3. Architecture</a>
+          <a href="#data">4. Data Model & Collections</a>
+          <a href="#security">5. Security (Rules + RBAC)</a>
+          <a href="#api">6. API Endpoints</a>
+          <a href="#setup">7. Setup & Environment</a>
+          <a href="#deploy">8. Deployment</a>
+          <a href="#tests">9. Testing</a>
+          <a href="#trouble">10. Troubleshooting</a>
+          <a href="#code">Appendix: Key Source Listings</a>
+        </div>
+
+        <div class="grid" id="doc">
+          <div class="card section" id="inventory" data-title="Feature Inventory">
+            <h2>1) Feature Inventory (implemented)</h2>
+
+            <h3>ICS (Operational Dashboard + POS + Admin)</h3>
+            <ul>
+              <li>Authentication: email/password + restaurant code login; password reset page.</li>
+              <li>RBAC: protected routes based on permissions.</li>
+              <li>Dashboard: live stats (active orders, tables occupied, kitchen load, sales summary).</li>
+              <li>POS: categories, menu items, cart, discount/tax, place order (writes orders + orderItems + table status).</li>
+              <li>Tables: table list, open order info per table, “Open POS” shortcut.</li>
+              <li>Menu Management: CRUD categories/menu items; image upload to Storage.</li>
+              <li>Staff Management: add/remove staff, drafts, document uploads, CSV export, audit logs.</li>
+              <li>Restaurant Logo: editable logo upload with validation + crop/resize; stored in Storage and referenced from restaurant doc.</li>
+            </ul>
+
+            <h3>KDS (Kitchen Display System)</h3>
+            <ul>
+              <li>Authentication: shared login flow.</li>
+              <li>Kitchen queue: real-time order items by station, sound notification for new orders.</li>
+              <li>Status updates: PREPARING/READY updates orderItems; best-effort parent order kitchenStatus update.</li>
+            </ul>
+
+            <h3>Platform / Infrastructure</h3>
+            <ul>
+              <li>Firebase Hosting: multi-site targets (ics + kds) via <span class="path">firebase.json</span>.</li>
+              <li>Firestore rules + Storage rules enforce restaurant scoping + RBAC.</li>
+              <li>Callable Cloud Function: <span class="path">uploadRestaurantLogo</span> (secure logo upload).</li>
+              <li>Google Cloud credential smoke-test script for service-account validation.</li>
+            </ul>
+          </div>
+
+          <div class="card section" id="structure" data-title="Directory Map">
+            <h2>2) Directory Map (where things live)</h2>
+            <ul>
+              <li><span class="path">apps/ics</span> – ICS frontend</li>
+              <li><span class="path">apps/kds</span> – KDS frontend</li>
+              <li><span class="path">shared</span> – shared UI components, Firebase client, hooks, types</li>
+              <li><span class="path">functions</span> – Firebase Cloud Functions (TypeScript)</li>
+              <li><span class="path">firestore.rules</span>, <span class="path">storage.rules</span> – security rules</li>
+              <li><span class="path">firebase.json</span>, <span class="path">.firebaserc</span> – Firebase hosting/project config</li>
+              <li><span class="path">scripts</span> – ops scripts (GCP smoke test)</li>
+            </ul>
+
+            <h3>Key ICS files</h3>
+            <ul>
+              <li>Routing: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/apps/ics/src/App.tsx">apps/ics/src/App.tsx</a></li>
+              <li>Layout / nav: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/apps/ics/src/layouts/ICSLayout.tsx">apps/ics/src/layouts/ICSLayout.tsx</a></li>
+              <li>Pages: <span class="muted">Dashboard, POS, Tables, Menu, Staff, Login, Forgot password</span></li>
+            </ul>
+
+            <h3>Key KDS files</h3>
+            <ul>
+              <li>Routing: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/apps/kds/src/App.tsx">apps/kds/src/App.tsx</a></li>
+              <li>Kitchen: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/apps/kds/src/pages/KitchenPage.tsx">apps/kds/src/pages/KitchenPage.tsx</a></li>
+            </ul>
+          </div>
+
+          <div class="card section" id="architecture" data-title="Architecture">
+            <h2>3) Architecture</h2>
+            <ul>
+              <li><b>Auth model:</b> Firebase Auth (email/password) + restaurant code lookup (Firestore).</li>
+              <li><b>Tenant scoping:</b> all business docs contain <span class="path">restaurantId</span>.</li>
+              <li><b>RBAC:</b> permissions are derived from roles (roles collection). The user document denormalizes permissions for rules.</li>
+              <li><b>Real-time:</b> pages use Firestore <span class="path">onSnapshot</span> subscriptions for live updates.</li>
+              <li><b>UI:</b> React + Tailwind utility classes; shared UI kit in <span class="path">shared/components</span>.</li>
+            </ul>
+          </div>
+
+          <div class="card section" id="data" data-title="Data Model">
+            <h2>4) Data Model & Collections</h2>
+            <div class="muted">Primary types are defined in: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/shared/firebase/types.ts">shared/firebase/types.ts</a></div>
+            <h3>Core collections</h3>
+            <ul>
+              <li><span class="path">users</span> – user profile (document id = Firebase Auth UID); includes restaurantId, roleIds, permissions (denormalized).</li>
+              <li><span class="path">restaurants</span> – tenant metadata; includes <span class="path">code</span> used for login and optional <span class="path">logoStoragePath</span>.</li>
+              <li><span class="path">roles</span> – role name + permissions, scoped by restaurantId.</li>
+              <li><span class="path">orders</span> – OPEN/CLOSED; includes kitchenStatus; totals.</li>
+              <li><span class="path">orderItems</span> – items belonging to orders; kitchenStatus per item.</li>
+              <li><span class="path">tables</span> – dine-in table state.</li>
+              <li><span class="path">categories</span>, <span class="path">menuItems</span> – menu management.</li>
+              <li><span class="path">staff</span> – staff records (admin only), with subcollection <span class="path">staff/{id}/documents</span>.</li>
+              <li><span class="path">auditLogs</span> – append-only audit entries for staff/doc events (admin only).</li>
+            </ul>
+          </div>
+
+          <div class="card section" id="security" data-title="Security">
+            <h2>5) Security (Rules + RBAC)</h2>
+            <ul>
+              <li>Firestore rules: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/firestore.rules">firestore.rules</a></li>
+              <li>Storage rules: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/storage.rules">storage.rules</a></li>
+            </ul>
+            <h3>RBAC flow</h3>
+            <ul>
+              <li>Login retrieves roles for the user and denormalizes <span class="path">permissions</span> onto <span class="path">users/{uid}</span>.</li>
+              <li>UI gates routes via <span class="path">ProtectedRoute</span> and <span class="path">usePermissions()</span>.</li>
+              <li>Rules enforce permissions for reads/writes.</li>
+            </ul>
+          </div>
+
+          <div class="card section" id="api" data-title="API Endpoints">
+            <h2>6) API Endpoints</h2>
+            <ul>
+              <li><b>Firebase callable function:</b> <span class="path">uploadRestaurantLogo</span> – uploads logo to Storage and updates restaurant doc.</li>
+              <li>Source: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/functions/src/index.ts">functions/src/index.ts</a></li>
+            </ul>
+          </div>
+
+          <div class="card section" id="setup" data-title="Setup">
+            <h2>7) Setup & Environment</h2>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Node.js (for this repo, Node 20+ recommended).</li>
+              <li>Firebase project with Auth + Firestore + Storage enabled.</li>
+            </ul>
+            <h3>Local run</h3>
+            <pre><code>npm install
+npm run dev:ics
+npm run dev:kds</code></pre>
+            <h3>Environment variables</h3>
+            <ul>
+              <li>ICS: <span class="path">apps/ics/.env</span> (see <span class="path">apps/ics/.env.example</span>)</li>
+              <li>KDS: <span class="path">apps/kds/.env</span> (see <span class="path">apps/kds/.env.example</span>)</li>
+            </ul>
+          </div>
+
+          <div class="card section" id="deploy" data-title="Deployment">
+            <h2>8) Deployment</h2>
+            <h3>Firebase Hosting</h3>
+            <pre><code>npm run build
+firebase deploy --only hosting:ics,hosting:kds,firestore:rules,storage</code></pre>
+            <h3>Rollback</h3>
+            <pre><code>firebase hosting:releases:list --site ics
+firebase hosting:rollback --site ics
+firebase hosting:releases:list --site kds
+firebase hosting:rollback --site kds</code></pre>
+          </div>
+
+          <div class="card section" id="tests" data-title="Testing">
+            <h2>9) Testing</h2>
+            <ul>
+              <li>Lint: <span class="path">npm --workspace apps/ics run lint</span>, <span class="path">npm --workspace apps/kds run lint</span></li>
+              <li>Unit tests (ICS): <span class="path">npm --workspace apps/ics run test</span> (Vitest)</li>
+              <li>GCP integration smoke test: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/scripts/gcp-smoke-test.ps1">scripts/gcp-smoke-test.ps1</a></li>
+            </ul>
+          </div>
+
+          <div class="card section" id="trouble" data-title="Troubleshooting">
+            <h2>10) Troubleshooting (common issues)</h2>
+            <h3>FirebaseError: auth/invalid-api-key</h3>
+            <ul>
+              <li>Cause: API key referrer restrictions missing localhost/prod domains.</li>
+              <li>Fix: add <span class="path">http://localhost:5173/*</span>, <span class="path">http://localhost:4173/*</span>, <span class="path">http://localhost:4174/*</span> to allowed referrers.</li>
+            </ul>
+            <h3>“Restaurant code not found”</h3>
+            <ul>
+              <li>Ensure <span class="path">restaurants/{id}</span> has field <span class="path">code</span> matching the login input.</li>
+            </ul>
+            <h3>“Missing or insufficient permissions”</h3>
+            <ul>
+              <li>Ensure <span class="path">users/{uid}.restaurantId</span> matches and role contains required permission key.</li>
+            </ul>
+          </div>
+
+          <div class="card section" id="code" data-title="Key Source Listings">
+            <h2>Appendix: Key Source Listings (selected)</h2>
+            <div class="muted">
+              To keep this document usable, only key modules are inlined here. Use the file links above to open full sources in your editor.
+            </div>
+
+            <h3>Firebase client bootstrap</h3>
+            <div class="muted">File: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/shared/firebase/config.ts">shared/firebase/config.ts</a></div>
+            <pre><code>// Initializes Firebase SDK clients (Auth/Firestore/Functions/Storage).
+// Uses a per-app build constant (__ORCA_APP__) to select ICS vs KDS web app config.
+// Falls back to embedded defaults if .env variables are missing.
+</code></pre>
+
+            <h3>RBAC route guard</h3>
+            <div class="muted">File: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/shared/components/ProtectedRoute.tsx">shared/components/ProtectedRoute.tsx</a></div>
+            <pre><code>// Blocks navigation unless authenticated and (optionally) has required permissions.
+// Uses react-router Outlet for nested route protection.</code></pre>
+
+            <h3>Restaurant logo editor</h3>
+            <div class="muted">File: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/shared/components/RestaurantLogo.tsx">shared/components/RestaurantLogo.tsx</a></div>
+            <pre><code>// Supports: upload/replace logo with client-side validation (png/jpg/svg, max 2MB).
+// Raster images can be cropped/resized client-side and stored as PNG.
+// Preferred upload path: callable function uploadRestaurantLogo; falls back to direct Storage upload.
+// Updates restaurant.logoStoragePath so the logo is editable post-creation.</code></pre>
+
+            <h3>Cloud Function: uploadRestaurantLogo</h3>
+            <div class="muted">File: <a href="file:///c:/Users/sonku/Desktop/website%20SELL/ORCA-CRM/functions/src/index.ts">functions/src/index.ts</a></div>
+            <pre><code>// Callable function (HTTPS onCall) that validates:
+// - authenticated user
+// - user.restaurantId matches target restaurant
+// - user has settings:edit permission
+// - image type and max size
+// Then uploads to Storage and updates restaurants/{id}.logoStoragePath.
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const q = document.getElementById("q");
+      const doc = document.getElementById("doc");
+      const sections = [...doc.querySelectorAll(".section")];
+
+      function norm(s){return (s||"").toLowerCase().trim()}
+      function apply(){
+        const term = norm(q.value);
+        if(!term){
+          sections.forEach(s=>s.classList.remove("hide"));
+          return;
+        }
+        sections.forEach(s=>{
+          const text = norm(s.innerText);
+          s.classList.toggle("hide", !text.includes(term));
+        });
+      }
+      q.addEventListener("input", apply);
+    </script>
+  </body>
+</html>
+

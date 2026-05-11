@@ -1,0 +1,35 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function userDoc() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+
+    function userRestaurantId() {
+      return userDoc().data.restaurantId;
+    }
+
+    function userPermissions() {
+      return userDoc().data.permissions;
+    }
+
+    function hasPerm(perm) {
+      return userDoc().exists() &&
+        userPermissions() != null &&
+        perm in userPermissions();
+    }
+
+    match /menuImages/{restaurantId}/{fileName} {
+      allow read: if request.auth != null && restaurantId == userRestaurantId();
+      allow write: if request.auth != null && restaurantId == userRestaurantId() && hasPerm("menu:edit");
+    }
+
+    match /staffDocs/{restaurantId}/{staffId}/{fileName} {
+      allow read, write: if request.auth != null && restaurantId == userRestaurantId() && hasPerm("staff:manage");
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

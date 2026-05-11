@@ -1,0 +1,38 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: ORCA_PAGES_BASE=/ORCA-CRM/ics/ npm --workspace apps/ics run build
+
+      - run: ORCA_PAGES_BASE=/ORCA-CRM/kds/ npm --workspace apps/kds run build
+
+      - run: |
+          rm -rf pages-dist
+          mkdir -p pages-dist/ics pages-dist/kds
+          cp -r pages/* pages-dist/
+          cp -r apps/ics/dist/* pages-dist/ics/
+          cp -r apps/kds/dist/* pages-dist/kds/
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: pages-dist
+
